@@ -21,6 +21,7 @@ let package = Package(
          .package(url: "https://github.com/krzyzanowskim/CryptoSwift", from: "1.7.2"),
          .package(url: "https://github.com/BlockchainCommons/URKit", from: "11.2.2"),
          .package(url: "https://github.com/wolfmcnally/WolfBase", from: "5.3.1"),
+         .package(url: "https://github.com/wolfmcnally/WolfLorem", from: "2.3.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -30,6 +31,6 @@ let package = Package(
             dependencies: ["CryptoSwift", "URKit", "WolfBase"]),
         .testTarget(
             name: "ProvenanceTests",
-            dependencies: ["Provenance"]),
+            dependencies: ["Provenance", "WolfLorem"]),
     ]
 )
