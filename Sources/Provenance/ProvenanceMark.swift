@@ -5,45 +5,35 @@ import func WolfBase.deserialize
 import func WolfBase.todo
 
 public struct ProvenanceMark {
-    static let linkLength = 8
-    static let seqBytesLength = 4
-    static let dateBytesLength = 4
-    static let hashLength = 8
-    
-    static let fixedLength = linkLength + linkLength + seqBytesLength + dateBytesLength + hashLength
-    
-    static let keyRange = 0..<linkLength
-    
-    // payload
-    static let idRange = 0 ..< linkLength
-    static let seqBytesRange = idRange.upperBound ..< (idRange.upperBound + seqBytesLength)
-    static let dateBytesRange = seqBytesRange.upperBound ..< (seqBytesRange.upperBound + dateBytesLength)
-    static let hashRange = dateBytesRange.upperBound ..< (dateBytesRange.upperBound + hashLength)
-    static let infoRange = hashRange.upperBound...
+    public let res: ProvenanceMarkResolution
     
     public let key: Data
+    public let hash: Data
     public let id: Data
     public let seqBytes: Data
     public let dateBytes: Data
     public let infoBytes: Data
-    public let hash: Data
     
     public let seq: UInt32
     public let date: Date
     public let info: CBOR?
+
     public let message: Data
     
-    public init?(key: Data, id: Data, seq: UInt32, date: Date, nextKey: Data, info: (any CBOREncodable)? = nil) {
+    public init?(resolution res: ProvenanceMarkResolution, key: Data, nextKey: Data, id: Data, seq: UInt32, date: Date, info: (any CBOREncodable)? = nil) {
+        self.res = res
+        
         guard
-            key.count == Self.linkLength,
-            id.count == Self.linkLength,
-            let dateBytes = date.provenanceSerialized
+            key.count == res.linkLength,
+            id.count == res.linkLength,
+            let dateBytes = res.serializeDate(date),
+            let seqBytes = res.serializeSeq(seq)
         else {
             return nil
         }
         self.key = key
         self.id = id
-        self.seqBytes = seq.serialized
+        self.seqBytes = seqBytes
         self.seq = seq
         self.dateBytes = dateBytes
         self.date = date
@@ -54,31 +44,32 @@ public struct ProvenanceMark {
             self.info = nil
             self.infoBytes = Data()
         }
-        self.hash = Self.hash(key: key, id: id, seqBytes: seqBytes, dateBytes: dateBytes, nextKey: nextKey, infoBytes: infoBytes)
-        let payload = id + seqBytes + dateBytes + hash + infoBytes
+        self.hash = Self.hash(resolution: res, key: key, nextKey: nextKey, id: id, seqBytes: seqBytes, dateBytes: dateBytes, infoBytes: infoBytes)
+        let payload = id + hash + seqBytes + dateBytes + infoBytes
         self.message = key + obfuscate(key: key, message: payload)
     }
     
-    public init?(message: Data) {
-        guard message.count >= Self.fixedLength else {
+    public init?(resolution res: ProvenanceMarkResolution, message: Data) {
+        self.res = res
+        guard message.count >= res.fixedLength else {
             return nil
         }
         self.message = message
-        self.key = message[Self.keyRange]
-        let payload = obfuscate(key: key, message: message[Self.linkLength...])
-        self.id = payload[Self.idRange]
-        self.seqBytes = payload[Self.seqBytesRange]
-        guard let seq = deserialize(UInt32.self, seqBytes) else {
+        self.key = message[res.keyRange]
+        let payload = obfuscate(key: key, message: message[res.linkLength...])
+        self.hash = payload[res.hashRange]
+        self.id = payload[res.idRange]
+        self.seqBytes = payload[res.seqBytesRange]
+        guard let seq = res.deserializeSeq(seqBytes) else {
             return nil
         }
         self.seq = seq
-        self.dateBytes = payload[Self.dateBytesRange]
-        guard let date = Date(provenanceSerialized: dateBytes) else {
+        self.dateBytes = payload[res.dateBytesRange]
+        guard let date = res.deserializeDate(dateBytes) else {
             return nil
         }
         self.date = date
-        self.hash = payload[Self.hashRange]
-        let infoBytes = payload[Self.infoRange]
+        let infoBytes = payload[res.infoRange]
         if infoBytes.isEmpty {
             self.info = nil
             self.infoBytes = Data()
@@ -91,49 +82,9 @@ public struct ProvenanceMark {
             }
         }
     }
-}
 
-public extension ProvenanceMark {
-    init?(bytewords: String) {
-        guard let message = try? Bytewords.decode(bytewords) else {
-            return nil
-        }
-        self.init(message: message)
-    }
-    
-    func bytewords(style: Bytewords.Style = .standard) -> String {
-        Bytewords.encode(message, style: style)
-    }
-}
-
-public extension ProvenanceMark {
-    var minimalBytewords: String { Bytewords.encode(cborData, style: .minimal) }
-    
-    init?(minimalBytewords: String) {
-        guard let data = try? Bytewords.decode(minimalBytewords, style: .minimal) else {
-            return nil
-        }
-        try? self.init(cborData: data)
-    }
-}
-
-public extension ProvenanceMark {
-    func url(base: URL) -> URL {
-        var result = base
-        result.append(queryItems: [URLQueryItem(name: "provenance", value: minimalBytewords)])
-        return result
-    }
-    
-    init?(url: URL) {
-        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        let queryItems = components?.queryItems ?? []
-        guard
-            let item = queryItems.first(where: { $0.name.lowercased() == "provenance" }),
-            let minimalBytewords = item.value
-        else {
-            return nil
-        }
-        self.init(minimalBytewords: minimalBytewords)
+    private static func hash(resolution res: ProvenanceMarkResolution, key: Data, nextKey: Data, id: Data, seqBytes: Data, dateBytes: Data, infoBytes: Data) -> Data {
+        sha256([key, nextKey, id, seqBytes, dateBytes, infoBytes], count: res.linkLength)
     }
 }
 
@@ -147,7 +98,7 @@ public extension ProvenanceMark {
         // `next` must have an equal or later date
         date <= next.date &&
         // `next` must reveal the key that was used to generate this mark's hash
-        hash == Self.hash(key: key, id: id, seqBytes: seqBytes, dateBytes: dateBytes, nextKey: next.key, infoBytes: infoBytes)
+        hash == Self.hash(resolution: res, key: key, nextKey: next.key, id: id, seqBytes: seqBytes, dateBytes: dateBytes, infoBytes: infoBytes)
     }
     
     static func isSequenceValid(marks: [ProvenanceMark]) -> Bool {
@@ -166,15 +117,46 @@ public extension ProvenanceMark {
         seq == 0 &&
         key == id
     }
+}
+
+public extension ProvenanceMark {
+    init?(resolution res: ProvenanceMarkResolution, bytewords: String) {
+        guard let message = try? Bytewords.decode(bytewords) else {
+            return nil
+        }
+        self.init(resolution: res, message: message)
+    }
     
-    private static func hash(key: Data, id: Data, seqBytes: Data, dateBytes: Data, nextKey: Data, infoBytes: Data) -> Data {
-        sha256([key, id, seqBytes, dateBytes, nextKey, infoBytes], count: Self.hashLength)
+    func bytewords(style: Bytewords.Style = .standard) -> String {
+        Bytewords.encode(message, style: style)
+    }
+}
+
+public extension ProvenanceMark {
+    init?(urlEncoding: String) {
+        guard
+            let cborData = try? Bytewords.decode(urlEncoding, style: .minimal)
+        else {
+            return nil
+        }
+        
+        try? self.init(cborData: cborData)
+    }
+    
+    var urlEncoding: String {
+        Bytewords.encode(cborData, style: .minimal)
     }
 }
 
 extension ProvenanceMark: Equatable {
     public static func ==(lhs: Self, rhs: Self) -> Bool {
-        lhs.key == rhs.key && lhs.id == rhs.id && lhs.dateBytes == rhs.dateBytes && lhs.hash == rhs.hash
+        lhs.res == rhs.res &&
+        lhs.key == rhs.key &&
+        lhs.hash == rhs.hash &&
+        lhs.id == rhs.id &&
+        lhs.seqBytes == rhs.seqBytes &&
+        lhs.dateBytes == rhs.dateBytes &&
+        lhs.infoBytes == rhs.infoBytes
     }
 }
 
@@ -182,10 +164,10 @@ extension ProvenanceMark: CustomStringConvertible {
     public var description: String {
         var components: [String] = [
             "key: \(key.hex)",
+            "hash: \(hash.hex)",
             "id: \(id.hex)",
 //            "seqBytes: \(seqBytes.hex)",
 //            "dateBytes: \(dateBytes.hex)",
-            "hash: \(hash.hex)",
             "seq: \(seq)",
             "date: \(date.ISO8601Format())",
 //            "message: \(message.hex)"
@@ -199,33 +181,24 @@ extension ProvenanceMark: CustomStringConvertible {
     }
 }
 
-extension Date {
-    var provenanceSerialized: Data? {
-        guard let n = UInt32(exactly: floor(timeIntervalSinceReferenceDate)) else {
-            return nil
-        }
-        return n.serialized
-    }
-    
-    init? (provenanceSerialized data: Data) {
-        guard let n = deserialize(UInt32.self, data) else {
-            return nil
-        }
-        self.init(timeIntervalSinceReferenceDate: TimeInterval(n))
-    }
-}
-
 extension ProvenanceMark: URCodable {
     public static let cborTag = Tag(0x50524f56, "provenance")
 
     public var untaggedCBOR: CBOR {
-        CBOR.bytes(message)
+        [
+            res.rawValue.cbor,
+            CBOR.bytes(message)
+        ].cbor
     }
 
     public init(untaggedCBOR: CBOR) throws {
         guard
-            case let CBOR.bytes(message) = untaggedCBOR,
-            let mark = ProvenanceMark(message: message)
+            case let CBOR.array(elements) = untaggedCBOR,
+            elements.count == 2,
+            case let resolutionRawValue = try Int(cbor: elements[0]),
+            let res = ProvenanceMarkResolution(rawValue: resolutionRawValue),
+            case let CBOR.bytes(message) = elements[1],
+            let mark = ProvenanceMark(resolution: res, message: message)
         else {
             throw CBORError.invalidFormat
         }

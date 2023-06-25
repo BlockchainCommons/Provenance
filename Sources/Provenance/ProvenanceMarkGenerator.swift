@@ -4,31 +4,33 @@ import WolfBase
 import BCCrypto
 
 public class ProvenanceMarkGenerator {
+    public let res: ProvenanceMarkResolution
     public let seed: Data
     public let id: Data
     public var nextSeq: UInt32
     public private(set) var rng: Xoshiro256StarStar
     
-    public init(seed: Data, id: Data, nextSeq: UInt32, rng: Xoshiro256StarStar) {
+    public init(resolution res: ProvenanceMarkResolution, seed: Data, id: Data, nextSeq: UInt32, rng: Xoshiro256StarStar) {
+        self.res = res
         self.seed = seed
         self.id = id
         self.nextSeq = nextSeq
         self.rng = rng
     }
     
-    public convenience init(seed: Data, id: Data) {
-        self.init(seed: seed, id: id, nextSeq: 0, rng: Xoshiro256StarStar(seed.data))
+    public convenience init(resolution res: ProvenanceMarkResolution, seed: Data, id: Data) {
+        self.init(resolution: res, seed: seed, id: id, nextSeq: 0, rng: Xoshiro256StarStar(seed.data))
     }
     
-    convenience init(passphrase: String, using rng: inout any RandomNumberGenerator) {
+    convenience init(resolution res: ProvenanceMarkResolution, passphrase: String, using rng: inout any RandomNumberGenerator) {
         let seed = extendKey(passphrase.utf8Data)
-        let id = rng.randomData(ProvenanceMark.linkLength)
-        self.init(seed: seed, id: id)
+        let id = rng.randomData(res.linkLength)
+        self.init(resolution: res, seed: seed, id: id)
     }
 
-    public convenience init(passphrase: String) {
+    public convenience init(resolution res: ProvenanceMarkResolution, passphrase: String) {
         var rng: RandomNumberGenerator = SecureRandomNumberGenerator()
-        self.init(passphrase: passphrase, using: &rng)
+        self.init(resolution: res, passphrase: passphrase, using: &rng)
     }
     
     public func next(date: Date = Date(), info: (any CBOREncodable)? = nil) -> ProvenanceMark {
@@ -40,13 +42,13 @@ public class ProvenanceMarkGenerator {
         if nextSeq == 0 {
             key = id
         } else {
-            key = rng.randomData(ProvenanceMark.linkLength)
+            key = rng.randomData(res.linkLength)
         }
 
         var nextRNG = rng
-        let nextKey = nextRNG.randomData(ProvenanceMark.linkLength)
+        let nextKey = nextRNG.randomData(res.linkLength)
 
-        return ProvenanceMark(key: key, id: id, seq: nextSeq, date: date, nextKey: nextKey, info: info)!
+        return ProvenanceMark(resolution: res, key: key, nextKey: nextKey, id: id, seq: nextSeq, date: date, info: info)!
     }
 }
 
