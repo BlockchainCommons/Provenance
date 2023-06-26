@@ -170,7 +170,7 @@ This small size is easy to handle, for example by writing it on a physical work 
 
 ### Provenance Mark Structure
 
-Provenance marks are a packed binary data structures consist of five mandatory fields and a sixth, optional `info` field at the end:
+Provenance marks are a packed binary data structure, consisting of five mandatory fields and an optional sixth `info` field at the end:
 
 | Name | Length | Description |
 |:--|:--|:--|
