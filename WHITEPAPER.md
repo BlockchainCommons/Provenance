@@ -211,7 +211,7 @@ key                               hash                              id          
 
 A cryptographic problem is considered "hard" if the most efficient known algorithm to solve it would take an impractical amount of time or resources, making it effectively impossible to solve using current technology.
 
-The cryptographic hardness (security level) of each provenance mark resolution increases as its `linkLen` increases. An attacker who wants to forge a next message in a chain would need to try an average of 2^(8 * `linkLen` - 1) hashes to find a the next `key`. This is known as a [preimage attack](https://en.wikipedia.org/wiki/Preimage_attack). For lower resolution marks, this attack may practically succeed with current hardware.
+The cryptographic hardness (security level) of each provenance mark resolution increases as its `linkLen` increases. An attacker who wants to forge a next message in a chain would need to try an average of 2^(8 * `linkLen` - 1) hashes to find the next `key`. This is known as a [preimage attack](https://en.wikipedia.org/wiki/Preimage_attack). For lower resolution marks, this attack may practically succeed with current hardware.
 
 But even discovering a series of collisions will not help the attacker discover the 32-byte seed used with the chain's PRNG; they will need to spend the same amount of effort for the production of every forged mark. So while the owner of the chain can produce marks with a single operation, an attacker will need to perform billions.
 
