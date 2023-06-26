@@ -21,11 +21,20 @@ public class ProvenanceMarkGenerator {
     public convenience init(resolution res: ProvenanceMarkResolution, seed: Data, id: Data) {
         self.init(resolution: res, seed: seed, id: id, nextSeq: 0, rng: Xoshiro256StarStar(seed.data))
     }
-    
-    convenience init(resolution res: ProvenanceMarkResolution, passphrase: String, using rng: inout any RandomNumberGenerator) {
-        let seed = extendKey(passphrase.utf8Data)
+
+    convenience init(resolution res: ProvenanceMarkResolution, seed: Data, using rng: inout any RandomNumberGenerator) {
         let id = rng.randomData(res.linkLength)
         self.init(resolution: res, seed: seed, id: id)
+    }
+
+    convenience init(resolution res: ProvenanceMarkResolution, passphrase: String, using rng: inout any RandomNumberGenerator) {
+        let seed = extendKey(passphrase.utf8Data)
+        self.init(resolution: res, seed: seed, using: &rng)
+    }
+
+    public convenience init(resolution res: ProvenanceMarkResolution, seed: Data) {
+        var rng: RandomNumberGenerator = SecureRandomNumberGenerator()
+        self.init(resolution: res, seed: seed, using: &rng)
     }
 
     public convenience init(resolution res: ProvenanceMarkResolution, passphrase: String) {
