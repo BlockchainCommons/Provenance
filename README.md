@@ -15,7 +15,7 @@ Read the [white paper](WHITEPAPER.md).
 
 * The Provenance code is available under the MIT license. See the [LICENSE file](LICENSE) for more info.
 
-* The [Provenance Mark Symbol](./art) is available under the [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).
+* The [Provenance Mark Symbol](./art) is available for use with the Provenance Marking system under the [Creative Commons Attribution-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-sa/4.0/).
 
 ## Installation
 
