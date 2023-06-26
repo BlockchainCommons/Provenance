@@ -2,12 +2,16 @@
 
 Wolf McNally<br/>wolf@wolfmcnally.com<br/>Jun 26, 2023
 
+---
 
-[PROVENANCE MARK: Click here to verify this document's authenticity](https://gist.github.com/wolfmcnally/86bce635a34fd991dce38e54869368e8#urprovenancelfaohdftdpkeiontynhpfljzfnntcxfzgoiakoryhnwspdlpjnrdspgopynnaxsflgtlrltogdwngysbmeflylkojkwsgtvtvoolbejprydefgaelukelrrtgstotawpylvl)
+<div style="display: flex;"><a href="https://gist.github.com/wolfmcnally/86bce635a34fd991dce38e54869368e8#urprovenancelfaohdftdpkeiontynhpfljzfnntcxfzgoiakoryhnwspdlpjnrdspgopynnaxsflgtlrltogdwngysbmeflylkojkwsgtvtvoolbejprydefgaelukelrrtgstotawpylvl" target="_blank" style="font-size:1.5em; text-align: top">
+<img src="Art/provenance-mark-symbol-white.svg" width="100" style="float: left; margin-right: 10px">
+<div>PROVENANCE MARK:<br/>Click here to verify this document's authenticity</div>
+</a></div>
 
 ---
 
-<a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+<div><a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-sa/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.</div>
 
 ---
 
