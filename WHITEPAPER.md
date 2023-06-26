@@ -69,7 +69,7 @@ Apps like [Gordian Seed Tool](https://apps.apple.com/us/app/gordian-seed-tool/id
 
 ### Pseudorandom Number Generator (PRNG)
 
-Unlike the cryptographically strong random number generator used to create the seed, pseudorandom number generators (PRNGs) are used when one wishes to generate an apparently random but actually deterministic sequence of random numbers. The seed is used to initialize the PRNG, defining an unique infinite sequence of pseudorandom numbers. Because the seed is kept secret, only the chain's owner can generate the next correct numbers in the sequence.
+Unlike the cryptographically strong random number generator used to create the seed, pseudorandom number generators (PRNGs) are used when one wishes to generate an apparently random but actually deterministic sequence of random numbers. The seed is used to initialize the PRNG, defining a unique infinite sequence of pseudorandom numbers. Because the seed is kept secret, only the chain's owner can generate the next correct numbers in the sequence.
 
 We employ the [Xoshiro256**](https://prng.di.unimi.it/) PRNG due to its robust statistical properties.
 
@@ -256,7 +256,7 @@ The first `key` in a chain is the same as the chain's `id`, so the "genesis" mar
 
 Part of the image of the `hash` field is the *next* key in the sequence (`nextKey`). Thus, the `key` field of this mark reveals the key used in the hash of the previous mark in the chain, and the `hash` field is a cryptographic commitment to the `nextKey`.
 
-Because the key is generated from the PRNG seeded by the chain owner's seed, it is hard for attackers who wish to produce forged marks to guess the upcoming sequence of keys as they would have to find a combination of valid fields for the forgery that produces the `hash` from the previous mark.
+Because the key is generated from the PRNG initialized by the chain owner's seed, it is hard for attackers who wish to produce forged marks to guess the upcoming sequence of keys as they would have to find a combination of valid fields for the forgery that produces the `hash` from the previous mark.
 
 The owner of the chain can choose to reveal the seed used to generate it as a way of claiming legitimate ownership of the chain (at the cost of burning the seed, but see below for discussion of using the `info` field to rotate seeds in such a case.)
 
@@ -270,11 +270,11 @@ The hash function's digest is then truncated to `linkLen` bytes, so depending on
 
 #### The `id` field
 
-The `id` field identifies the chain that produced a given provenance mark. In the genesis mark the `id` MUST BE equal to `key`. The `id` field is also `linkLen` bytes long.
+The `id` field identifies the chain that produced a given provenance mark. In the genesis mark the `id` MUST be equal to `key`. The `id` field is also `linkLen` bytes long.
 
 #### The `seq` field
 
-The `seq` (sequence number) field identifies the order of a given mark within its chain. The `seq` in a genesis mark MUST BE zero. Each subsequent mark in the chain MUST carry the next incrementally higher `seq`, i.e., (0, 1, 2, 3, 4...). The bytes of the value are serialized in big-endian order.
+The `seq` (sequence number) field identifies the order of a given mark within its chain. The `seq` in a genesis mark MUST be zero. Each subsequent mark in the chain MUST carry the next incrementally higher `seq`, i.e., (0, 1, 2, 3, 4...). The bytes of the value are serialized in big-endian order.
 
 `low` resolution provenance marks use two bytes for `seq`, allowing up to 2^16 == 65,536 marks in a chain, while the `medium`, `quartile`, and `high` resolution use 4 bytes, allowing 2^32 == 4,294,967,296 marks in a chain.
 
@@ -396,7 +396,7 @@ As mentioned above, the UR format is specifically designed to produce QR codes o
 Finally, a bytewords-encoded provenance mark can be placed into a URL that includes information about where to verify the mark in its entire chain of marks. URLs like this can be displayed as clickable links or placed into QR codes:
 
 ```
-https://example.com/validate?provenance=tngdgmgwhflfaegdkbrehkrktiisfgtitbvoswpdfylpghvshycyndao
+https://gist.github.com/wolfmcnally/86bce635a34fd991dce38e54869368e8#urprovenancelfaohdftdpkeiontynhpfljzfnntcxfzgoiakoryhnwspdlpjnrdspgopynnaxsflgtlrltogdwngysbmeflylkojkwsgtvtvoolbejprydefgaelukelrrtgstotawpylvl
 ```
 
 ![](images/link-qr-code.png)
@@ -411,7 +411,7 @@ Heartbeat marks serve two key functions:
 
 ### Temporal Synchronization
 
-By periodically emitting provenance marks, content creators establish a consistent temporal rhythm for their output. Even if no new works are produced within a given timeframe, the heartbeat continues, providing a continuous temporal context for the provenance sequence. This makes it easier to spot anomalies in the sequence and provides a stronger temporal structure to the provenance chain.
+By periodically emitting provenance marks, content creators establish a consistent temporal rhythm for their output. The heartbeat continues even if no new works are produced within a given timeframe, providing a continuous temporal context for the provenance mark sequence. This makes it easier to spot anomalies in the sequence and provides a stronger temporal structure to the provenance chain.
 
 ### Preventing Future Date Forgery
 
@@ -421,7 +421,7 @@ For example, let's say an artist publishes a heartbeat mark every week on Monday
 
 Heartbeat marks also make forgery detectable for marks that claim to be produced later than the next heartbeat mark to appear.  Any forged mark claiming to be published in the future would have to be positioned after the heartbeat mark for that period. Even if the attacker breaks a single key, the next heartbeat mark to appear would repudiate the forgery.
 
-Adding a heartbeat of blank marks to the provenance sequence provides a stronger temporal structure and an additional layer of security against forgeries. This extension underscores the versatility and adaptability of our provenance marking system to address the complex demands of establishing and verifying provenance.
+Adding a heartbeat of blank marks to the provenance mark sequence provides a stronger temporal structure and an additional layer of security against forgeries. This extension underscores the versatility and adaptability of our provenance marking system to address the complex demands of establishing and verifying provenance.
 
 ## Strengths, Weaknesses, and Implications
 
@@ -473,13 +473,13 @@ While the proposed provenance marking system is designed to be straightforward a
 
 ### Public Registries
 
-Public registries serve as an invaluable tool for bolstering the system's robustness. By registering each work and its associated provenance mark, content creators create a public record that can be referred to by anyone. This minimizes the chances of an unauthorized party falsely attributing a work. The registry could be a simple website, a database, or even a blockchain, depending on the specific needs and context. It should ideally be easily accessible, user-friendly, and tamper-resistant.
+Public registries serve as an invaluable tool for bolstering the system's robustness. By registering each work and its associated provenance mark, content creators create a public record to which anyone can refer. This minimizes the chances of an unauthorized party falsely attributing a work. The registry could be a simple website, a database, or even a blockchain, depending on the specific needs and context. It should ideally be easily accessible, user-friendly, and tamper-resistant.
 
 Where the number of marks in a chain is moderate (up to the low thousands), public version control systems like [GitHub](https://github.com/) could be used as free public repositories of entire chains of provenance marks, including a history of revisions to metadata. High volume chains may require custom databases and specific protocols for verifying provenance marks.
 
 ### Independent Verification Services
 
-Third-party services could be employed to independently verify the provenance marks. These services, which could operate in a manner similar to certificate authorities in PKI systems, would add an additional layer of trust and validation. They could periodically verify the integrity of the public registry, independently confirm the provenance of works, and provide services for dispute resolution.
+Third-party services could be employed to independently verify provenance marks. These services, which could operate in a manner similar to certificate authorities in PKI systems, would add an additional layer of trust and validation. They could periodically verify the integrity of the public registry, independently confirm the provenance of works, and provide services for dispute resolution.
 
 ### Periodic Key Rotation
 
