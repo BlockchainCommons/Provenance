@@ -51,7 +51,7 @@ Expert authentication has been, and continues to be, a crucial aspect of verifyi
 
 Over the past century, scientific methods have increasingly been employed to assist in the verification of provenance. These include materials analysis, radiometric dating, and forensic techniques, among others. While powerful, these techniques often require specialized equipment and expertise and may not be accessible or appropriate for all types of works.
 
-These historical methods of verifying provenance have proven effective over time but also come with their own challenges, such as susceptibility to forgery, the need for expert knowledge, and reliance on physical artifacts and documentation. The proposed provenance marking system, while designed for a modern context, draws on the principles of these traditional methods. It offers a simple, accessible way of marking a work's origin and sequence in a body of work, while leveraging the robustness of cryptographic techniques to guard against forgery and misattribution.
+These historical methods of verifying provenance have proven effective over time but also come with their own challenges, such as susceptibility to forgery, the need for expert knowledge, and reliance on physical artifacts and documentation. The proposed provenance marking system, while designed for a modern context, draws on the principles of these traditional methods. It offers a simple, accessible way of marking a work's origin and sequence in a body of work, while leveraging the robustness of cryptographic techniques to guard against forgery and mis-attribution.
 
 ## Method
 
@@ -231,7 +231,7 @@ The first field, `key`, is the header of the structure. The other fields are col
 
 Because the `key` field is statistically random, and due to the obfuscation of the rest of the fields, the entire embodied provenance mark appears to be uniformly random, without any runs or sequences of symbols regardless of the internal structure of its content.
 
-The ChaCha20 cipher requires a 32-byte key and a 12-byte initialiation vector (nonce). To meet these requirments we use the Hashed Key Derivation Function (HKDF-SHA256) to stretch the key from `linkLen` to the required length of 32. For the initialization vector we reverse the streched key and take its first 12 bytes. These two functions, `extendKey` and `obfuscate` are implemented in pseudocode like this:
+The ChaCha20 cipher requires a 32-byte key and a 12-byte initialization vector (nonce). To meet these requirements we use the Hashed Key Derivation Function (HKDF-SHA256) to stretch the key from `linkLen` to the required length of 32. For the initialization vector we reverse the stretched key and take its first 12 bytes. These two functions, `extendKey` and `obfuscate` are implemented in pseudocode like this:
 
 ```swift
 func extendKey(data: Data) -> Data {
