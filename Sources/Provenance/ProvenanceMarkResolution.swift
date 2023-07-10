@@ -21,7 +21,7 @@ import WolfBase
 // 0123456789abcdef0123456789abcdef  0123456789abcdef0123456789abcdef  0123456789abcdef0123456789abcdef  0123  456789
 // key                               hash                              id                                seq   date
 
-public enum ProvenanceMarkResolution: Int {
+public enum ProvenanceMarkResolution: Int, Equatable, Codable {
     case low
     case medium
     case quartile

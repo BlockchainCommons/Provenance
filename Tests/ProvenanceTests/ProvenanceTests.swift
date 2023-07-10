@@ -5,6 +5,15 @@ import WolfBase
 import WolfLorem
 
 final class ProvenanceTests: XCTestCase {
+    func testSaveRNGState() {
+        let state: (UInt64, UInt64, UInt64, UInt64) = (17295166580085024720, 422929670265678780, 5577237070365765850, 7953171132032326923)
+        let data = Xoshiro256StarStar.toData(from: state)
+        XCTAssertEqual(data.hex, "d0e72cf15ec604f0bcab28594b8cde05dab04ae79053664d0b9dadc201575f6e")
+        let state2 = Xoshiro256StarStar.toState(from: data)
+        let data2 = Xoshiro256StarStar.toData(from: state2)
+        XCTAssertEqual(data, data2)
+    }
+
     func test2ByteDates() {
         let baseDate = try! Date(iso8601: "2023-06-20T00:00:00Z")
         let baseDateSerialized = baseDate.serialize2Bytes()!
@@ -82,14 +91,26 @@ final class ProvenanceTests: XCTestCase {
         let dates = (0..<count).map {
             calendar.date(byAdding: .day, value: $0, to: baseDate)!
         }
+        
+        let encoder = JSONEncoder()
+        var encodedGenerator = try! encoder.encode(provenanceGen)
+        
         let marks = dates.map {
+            let decoder = JSONDecoder()
+            let gen = try! decoder.decode(ProvenanceMarkGenerator.self, from: encodedGenerator)
+            
             let title: String?
             if includeInfo {
                 title = Lorem.title(using: &rng)
             } else {
                 title = nil
             }
-            return provenanceGen.next(date: $0, info: title)
+            let result = gen.next(date: $0, info: title)
+            
+            let encoder = JSONEncoder()
+            encodedGenerator = try! encoder.encode(gen)
+            
+            return result
         }
         
         XCTAssert(ProvenanceMark.isSequenceValid(marks: marks))
@@ -137,6 +158,14 @@ final class ProvenanceTests: XCTestCase {
             ProvenanceMark(url: $0)!
         }
         XCTAssertEqual(marks, urlMarks)
+        
+        for mark in marks {
+            let encoder = JSONEncoder()
+            let data = try! encoder.encode(mark)
+            let decoder = JSONDecoder()
+            let mark2 = try! decoder.decode(ProvenanceMark.self, from: data)
+            XCTAssertEqual(mark, mark2)
+        }
     }
     
     func testLow() {
