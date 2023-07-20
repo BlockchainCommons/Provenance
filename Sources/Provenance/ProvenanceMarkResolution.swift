@@ -125,6 +125,22 @@ public enum ProvenanceMarkResolution: Int, Equatable, Codable, Identifiable, Cas
 }
 
 
+extension ProvenanceMarkResolution: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .low:
+            "low"
+        case .medium:
+            "medium"
+        case .quartile:
+            "quartile"
+        case .high:
+            "high"
+        }
+    }
+}
+
+
 extension Date {
     // fedcba9876543210
     // yyyyyyymmmmddddd

@@ -97,7 +97,7 @@ final class ProvenanceTests: XCTestCase {
         
         let marks = dates.map {
             let decoder = JSONDecoder()
-            let gen = try! decoder.decode(ProvenanceMarkGenerator.self, from: encodedGenerator)
+            var gen = try! decoder.decode(ProvenanceMarkGenerator.self, from: encodedGenerator)
             
             let title: String?
             if includeInfo {
