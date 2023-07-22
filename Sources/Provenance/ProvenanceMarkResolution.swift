@@ -67,8 +67,8 @@ public enum ProvenanceMarkResolution: Int, Equatable, Codable, Identifiable, Cas
     public var fixedLength: Int { linkLength * 3 + seqBytesLength + dateBytesLength }
     
     public var keyRange: Range<Int> { 0..<linkLength }
-    public var idRange: Range<Int> { 0 ..< linkLength }
-    public var hashRange: Range<Int> { idRange.upperBound ..< (idRange.upperBound + linkLength) }
+    public var chainIDRange: Range<Int> { 0 ..< linkLength }
+    public var hashRange: Range<Int> { chainIDRange.upperBound ..< (chainIDRange.upperBound + linkLength) }
     public var seqBytesRange: Range<Int> { hashRange.upperBound ..< (hashRange.upperBound + seqBytesLength) }
     public var dateBytesRange: Range<Int> { seqBytesRange.upperBound ..< (seqBytesRange.upperBound + dateBytesLength) }
     public var infoRange : PartialRangeFrom<Int> { dateBytesRange.upperBound... }

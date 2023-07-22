@@ -3,28 +3,34 @@ import DCBOR
 import WolfBase
 import BCCrypto
 
-public struct ProvenanceMarkGenerator: Hashable, Codable {
-    public let res: ProvenanceMarkResolution
+public struct ProvenanceMarkGenerator: Codable, Hashable {
+    public let _res: Int
     public let seed: Data
-    public let id: Data
+    public let chainID: Data
     public var nextSeq: UInt32
     public var rngState: Data
+    
+    // KLUDGE ALERT: Temporary workaround for the fact that pre-release SwiftData
+    // does not properly persist codable enums!
+    public var res: ProvenanceMarkResolution {
+        ProvenanceMarkResolution(rawValue: _res)!
+    }
 
-    public init(resolution res: ProvenanceMarkResolution, seed: Data, id: Data, nextSeq: UInt32, rngState: Data) {
-        self.res = res
+    public init(resolution res: ProvenanceMarkResolution, seed: Data, chainID: Data, nextSeq: UInt32, rngState: Data) {
+        self._res = res.rawValue
         self.seed = seed
-        self.id = id
+        self.chainID = chainID
         self.nextSeq = nextSeq
         self.rngState = rngState
     }
 
-    public init(resolution res: ProvenanceMarkResolution, seed: Data, id: Data) {
-        self.init(resolution: res, seed: seed, id: id, nextSeq: 0, rngState: seed)
+    public init(resolution res: ProvenanceMarkResolution, seed: Data, chainID: Data) {
+        self.init(resolution: res, seed: seed, chainID: chainID, nextSeq: 0, rngState: seed)
     }
     
     public init<R>(resolution res: ProvenanceMarkResolution, seed: Data, using rng: inout R) where R: RandomNumberGenerator {
-        let id = rng.randomData(res.linkLength)
-        self.init(resolution: res, seed: seed, id: id)
+        let chainID = rng.randomData(res.linkLength)
+        self.init(resolution: res, seed: seed, chainID: chainID)
     }
     
     public init<R>(resolution res: ProvenanceMarkResolution, using rng: inout R) where R: RandomNumberGenerator {
@@ -61,7 +67,7 @@ public struct ProvenanceMarkGenerator: Hashable, Codable {
         
         let key: Data
         if nextSeq == 0 {
-            key = id
+            key = chainID
         } else {
             key = rng.randomData(res.linkLength)
             rngState = rng.stateData
@@ -70,12 +76,12 @@ public struct ProvenanceMarkGenerator: Hashable, Codable {
         var nextRNG = rng
         let nextKey = nextRNG.randomData(res.linkLength)
         
-        return ProvenanceMark(resolution: res, key: key, nextKey: nextKey, id: id, seq: nextSeq, date: date, info: info)!
+        return ProvenanceMark(resolution: res, key: key, nextKey: nextKey, chainID: chainID, seq: nextSeq, date: date, info: info)!
     }
 }
 
 extension ProvenanceMarkGenerator: CustomStringConvertible {
     public var description: String {
-        "ProvenanceMarkGenerator(id: \(id.hex), res: \(res), seed: \(seed.hex), nextSeq: \(nextSeq), rngState: \(rngState.hex))"
+        "ProvenanceMarkGenerator(chainID: \(chainID.hex), res: \(res), seed: \(seed.hex), nextSeq: \(nextSeq), rngState: \(rngState.hex))"
     }
 }

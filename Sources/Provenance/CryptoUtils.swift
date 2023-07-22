@@ -5,8 +5,12 @@ func sha256(_ data: Data) -> Data {
     Data(CryptoSwift.SHA2(variant: .sha256).calculate(for: data.bytes))
 }
 
-func sha256(_ data: [Data], count: Int) -> Data {
-    sha256(Data(data.joined())).prefix(count)
+func sha256(_ data: [Data]) -> Data {
+    sha256(Data(data.joined()))
+}
+
+func sha256(_ data: [Data], prefix: Int) -> Data {
+    sha256(data).prefix(prefix)
 }
 
 func extendKey(_ data: Data) -> Data {
