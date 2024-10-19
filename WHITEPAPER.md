@@ -36,6 +36,7 @@ In this nascent era of rampant AI-powered digital manipulation and plagiarism, b
     - [The Hash Chain](#the-hash-chain)
     - [Chain ID, Sequence Number, and Date Stamp](#chain-id-sequence-number-and-date-stamp)
     - [Verification](#verification)
+    - [Human Identification](#human-identification)
     - [Provenance Mark Resolution](#provenance-mark-resolution)
     - [Provenance Mark Structure](#provenance-mark-structure)
         - [Payload Obfuscation](#payload-obfuscation)
@@ -239,7 +240,7 @@ public extension ProvenanceMark {
 
 This process confirms that the works are part of the same chain and have been created by the same individual or entity. Moreover, once the creator publishes a new work, it retroactively verifies the authenticity of the committed-to `hash` in the previous work.
 
-#### Human Identification
+### Human Identification
 
 For quick identification, the first four bytes of a provenance mark's `hash` can be translated into Bytewords and displayed with a provenance mark symbol, which can either be the logo of the provenance marking system seen at the top of this document, and which is approved for public use in this capacity, or the unicode symbol `🅟` (U+1F15F, "NEGATIVE CIRCLED LATIN CAPITAL LETTER P"):
 
@@ -277,15 +278,15 @@ To support a range of space vs. security tradeoffs, provenance marks support fou
 When a `low` resolution mark is packaged as Bytewords, the Bytewords standard adds an additional 4 words as a CRC-32 checksum. So a `low` resolution provenance mark would consist of a total of 16 + 4 == 20 words. An example would be:
 
 ```
-knob race hawk rock taxi
-iris frog taxi tomb veto
-skew paid foxy limp gush
-vows back grim time glow
+taco kite buzz nail arch
+fact bias nail apex plus
+deli wave cats webs ruin
+legs quiz draw work onyx
 ```
 
 It doesn't matter whether these twenty words are formatted as a single line of text, or as four rows of five words, or five rows of four words, etc., as long as the order of the words is clear.
 
-This small size is easy to handle, for example by writing it on a physical work of art, or displaying it in a video work.
+This small size is easy to handle, for example by writing it on a physical work of art, or displaying it in a video work. Unlike the four Bytewords used for human identification, thse are the full Bytewords of the mark.
 
 ### Provenance Mark Structure
 

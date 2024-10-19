@@ -5,7 +5,7 @@ import func WolfBase.deserialize
 import func WolfBase.todo
 
 public struct ProvenanceMark: Codable, Hashable {
-    public let _res: Int
+    public let res: ProvenanceMarkResolution
     
     public let key: Data
     public let hash: Data
@@ -18,14 +18,6 @@ public struct ProvenanceMark: Codable, Hashable {
     public let date: Date
 
     public let message: Data
-    
-    public let markID: Data
-    
-    // KLUDGE ALERT: Temporary workaround for the fact that pre-release SwiftData
-    // does not properly persist codable enums!
-    public var res: ProvenanceMarkResolution {
-        ProvenanceMarkResolution(rawValue: _res)!
-    }
     
     public var idWords: String {
         return hash
@@ -43,7 +35,7 @@ public struct ProvenanceMark: Codable, Hashable {
     }
 
     public init?(resolution res: ProvenanceMarkResolution, key: Data, nextKey: Data, chainID: Data, seq: UInt32, date: Date, info: (any CBOREncodable)? = nil) {
-        self._res = res.rawValue
+        self.res = res
         
         guard
             key.count == res.linkLength,
@@ -67,12 +59,10 @@ public struct ProvenanceMark: Codable, Hashable {
         self.hash = Self.hash(resolution: res, key: key, nextKey: nextKey, chainID: chainID, seqBytes: seqBytes, dateBytes: dateBytes, infoBytes: infoBytes)
         let payload = chainID + hash + seqBytes + dateBytes + infoBytes
         self.message = key + obfuscate(key: key, message: payload)
-        
-        self.markID = Self.markID(message: message)
     }
     
     public init?(resolution res: ProvenanceMarkResolution, message: Data) {
-        self._res = res.rawValue
+        self.res = res
         guard message.count >= res.fixedLength else {
             return nil
         }
@@ -101,16 +91,10 @@ public struct ProvenanceMark: Codable, Hashable {
                 return nil
             }
         }
-
-        self.markID = Self.markID(message: message)
     }
 
     private static func hash(resolution res: ProvenanceMarkResolution, key: Data, nextKey: Data, chainID: Data, seqBytes: Data, dateBytes: Data, infoBytes: Data) -> Data {
         sha256([key, nextKey, chainID, seqBytes, dateBytes, infoBytes], prefix: res.linkLength)
-    }
-    
-    private static func markID(message: Data) -> Data {
-        sha256(message)
     }
 }
 
