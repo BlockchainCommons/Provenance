@@ -4,7 +4,7 @@ Wolf McNally<br/>wolf@wolfmcnally.com<br/>Jun 26, 2023
 
 ---
 
-<div style="display: flex;"><a href="https://gist.github.com/wolfmcnally/86bce635a34fd991dce38e54869368e8#urprovenancelfaohdftdpkeiontynhpfljzfnntcxfzgoiakoryhnwspdlpjnrdspgopynnaxsflgtlrltogdwngysbmeflylkojkwsgtvtvoolbejprydefgaelukelrrtgstotawpylvl" target="_blank" style="font-size:1.5em; text-align: top">
+<div style="display: flex;"><a href="https://gist.github.com/wolfmcnally/86bce635a34fd991dce38e54869368e8#urprovenancelfaohdftdpkeiontynhpfljzfnntcxfzgoiakoryeheyimdirfesvttptikiolwshnpakobgeofgdnmnuraydmgrwfpfiewpvodawelrrydefgaelukelrrtgstovszcbzdm" target="_blank" style="font-size:1.5em; text-align: top">
 <img src="./art/provenance-mark-symbol-white.svg" width="100" style="float: left; margin-right: 10px">
 <div>PROVENANCE MARK:<br/>Click here to verify this document's authenticity</div>
 </a></div>
@@ -516,7 +516,7 @@ As mentioned above, the UR format is specifically designed to produce QR codes o
 Finally, a bytewords-encoded provenance mark can be placed into a URL that includes information about where to verify the mark in its entire chain of marks. URLs like this can be displayed as clickable links or placed into QR codes:
 
 ```
-https://gist.github.com/wolfmcnally/86bce635a34fd991dce38e54869368e8#urprovenancelfaohdftdpkeiontynhpfljzfnntcxfzgoiakoryhnwspdlpjnrdspgopynnaxsflgtlrltogdwngysbmeflylkojkwsgtvtvoolbejprydefgaelukelrrtgstotawpylvl
+https://gist.github.com/wolfmcnally/86bce635a34fd991dce38e54869368e8#urprovenancelfaohdftdpkeiontynhpfljzfnntcxfzgoiakoryeheyimdirfesvttptikiolwshnpakobgeofgdnmnuraydmgrwfpfiewpvodawelrrydefgaelukelrrtgstovszcbzdm
 ```
 
 ![](images/link-qr-code.png)
