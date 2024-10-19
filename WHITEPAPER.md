@@ -487,7 +487,7 @@ When decoded to [CBOR diagnostic notation]([CBOR](https://cbor.me)) becomes:
 1347571542([0, h'7EB559BBD06846D0D6E2C6A8448554E8'])
 ```
 
-The first integer is a CBOR "tag" identifying this as a provenance mark, and the first element of the array is `0`, signifying the `low` resolution. The hex string is the 16 bytes of the mark itself.
+The first integer (`1347571542`, hex `0x50524f56`, ASCII `PROV`) is a CBOR tag identifying this as a provenance mark, and the first element of the array is `0`, signifying the `low` resolution. The hex string is the 16 bytes of the mark itself.
 
 #### URs
 
