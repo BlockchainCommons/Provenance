@@ -11,6 +11,14 @@ extension Xoshiro256StarStar {
         set { self.state = Self.toState(from: newValue) }
     }
     
+    mutating func nextByte() -> UInt8 {
+        UInt8(truncatingIfNeeded: next())
+    }
+    
+    mutating func nextBytes(_ count: Int) -> Data {
+        Data((0..<count).map { _ in self.nextByte() })
+    }
+    
     static func toState(from data: Data) -> (UInt64, UInt64, UInt64, UInt64) {
         guard data.count == 32 else {
             preconditionFailure()

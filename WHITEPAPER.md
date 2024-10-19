@@ -19,6 +19,66 @@ Wolf McNally<br/>wolf@wolfmcnally.com<br/>Jun 26, 2023
 
 In this nascent era of rampant AI-powered digital manipulation and plagiarism, best practices for establishing the provenance of works of art both tangible and intangible like videos, as well as other creative or intellectual outputs has never been more critical. This paper introduces a novel approach for marking and verifying the provenance of works that blends cryptography, pseudorandom number generation, and linguistic representation. We describe a system of "Provenance Marks" that generate a small but unique digital "mark" for each work. Each mark includes a portion that verifies the authenticity of the previous mark and a portion that, through a hash function, commits to the content of the next mark. The result is a cryptographically-secured chain of marks associated with works that facilitates easy and public verification of provenance. In one basic form, these provenance marks may be represented as a simple sequence of natural language words. This system affords users the dual advantages of a robust security mechanism and a linguistically intuitive and easily transcribed sequence, providing a simple yet effective solution to establish and verify the provenance of works in the digital era. We anticipate this approach will prove particularly useful for artists, content creators, and institutions looking to secure their works against fraudulent attributions and deep fakes, thereby preserving their reputation and the integrity of their works. It may also have applications in larger commercial fields involving product authenticity, supply chain, and chain-of-custody verification.
 
+## Contents
+
+- [Introduction](#introduction)
+- [Historical Methods of Verifying Provenance](#historical-methods-of-verifying-provenance)
+    - [Artist Signatures and Monograms](#artist-signatures-and-monograms)
+    - [Seals and Stamps](#seals-and-stamps)
+    - [Documentation and Pedigree](#documentation-and-pedigree)
+    - [Expert Authentication](#expert-authentication)
+    - [Scientific and Technical Analysis](#scientific-and-technical-analysis)
+- [Method](#method)
+    - [The Seed](#the-seed)
+    - [Pseudorandom Number Generator (PRNG)](#pseudorandom-number-generator-prng)
+    - [Cryptographic Hash Function](#cryptographic-hash-function)
+    - [Bytewords](#bytewords)
+    - [The Hash Chain](#the-hash-chain)
+    - [Chain ID, Sequence Number, and Date Stamp](#chain-id-sequence-number-and-date-stamp)
+    - [Verification](#verification)
+    - [Provenance Mark Resolution](#provenance-mark-resolution)
+    - [Provenance Mark Structure](#provenance-mark-structure)
+        - [Payload Obfuscation](#payload-obfuscation)
+        - [The `key` Field](#the-key-field)
+        - [The `hash` Field](#the-hash-field)
+        - [The `id` Field](#the-id-field)
+        - [The `seq` Field](#the-seq-field)
+        - [The `date` Field](#the-date-field)
+            - [`low` resolution date encoding](#low-resolution-date-encoding)
+            - [`medium` resolution date encoding](#medium-resolution-date-encoding)
+            - [`quartile` and `high` resolution date encoding](#quartile-and-high-resolution-date-encoding)
+        - [The `info` Field](#the-info-field)
+    - [Security Analysis of the Four Resolutions](#security-analysis-of-the-four-resolutions)
+    - [Other Output Formats](#other-output-formats)
+        - [CBOR](#cbor)
+        - [URs](#urs)
+        - [QR Codes](#qr-codes)
+        - [URLs](#urls)
+- [Extension: Periodic "Heartbeat" Marks](#extension-periodic-heartbeat-marks)
+    - [Temporal Synchronization](#temporal-synchronization)
+    - [Preventing Future Date Forgery](#preventing-future-date-forgery)
+- [Extension: Chain Rotation](#extension-chain-rotation)
+    - [Motivations for Chain Rotation](#motivations-for-chain-rotation)
+    - [Implementing Chain Rotation](#implementing-chain-rotation)
+- [Strengths, Weaknesses, and Implications](#strengths-weaknesses-and-implications)
+    - [Strengths](#strengths)
+    - [Weaknesses](#weaknesses)
+    - [Implications](#implications)
+- [Comparison with Existing Digital Systems](#comparison-with-existing-digital-systems)
+    - [Digital Signatures and Watermarking](#digital-signatures-and-watermarking)
+    - [Public Key Infrastructure (PKI) Systems](#public-key-infrastructure-pki-systems)
+    - [Blockchain-Based Provenance Systems](#blockchain-based-provenance-systems)
+- [Improving the Robustness of the Provenance Marking Method](#improving-the-robustness-of-the-provenance-marking-method)
+    - [Public Registries](#public-registries)
+    - [Independent Verification Services](#independent-verification-services)
+    - [Backup and Recovery](#backup-and-recovery)
+- [Potential Fields of Application](#potential-fields-of-application)
+    - [Chains of Custody](#chains-of-custody)
+    - [Supply Chain Management](#supply-chain-management)
+    - [Document Verification](#document-verification)
+    - [Blockchain and Digital Assets](#blockchain-and-digital-assets)
+    - [Environment and Sustainability](#environment-and-sustainability)
+
 ## Introduction
 
 In the digital era, the issue of authenticity and provenance has risen to prominence as never before. The ready ability to manipulate, duplicate, and distribute digital content, particularly using artificial intelligence (AI) tools, raises pressing questions about originality, ownership, and authenticity. This is particularly crucial for works of art, digital content, and other creative outputs, where the provenance of a piece can significantly impact its value, both culturally and economically.
@@ -130,9 +190,9 @@ This forms a verifiable chain, where each mark can be authenticated and linked t
 
 ![](images/hash-chain.png)
 
-The first mark in the chain (called the "genesis mark") can either be assigned to a work or left "blank" and published solely as the basis of trust for the rest of the chain. Its `key`, while never used in a `hash`, nonetheless could only have been generated by the creator's PRNG, and hence could be verified, if necessary, by the creator revealing the seed.
+The first mark in the chain (called the "genesis mark") can either be assigned to a work or left "blank" and published solely as the basis of trust for the rest of the chain. Its `key`, while never used in a `hash` (except in [Chain Rotation](#extension-chain-rotation)), nonetheless could only have been generated by the creator's PRNG, and hence could be verified, if necessary, by the creator revealing the seed.
 
-### Chain ID, Sequence Number and Date Stamp
+### Chain ID, Sequence Number, and Date Stamp
 
 Each provenance mark also includes three additional fields that improve the chain's robustness and auditability: a chain ID (`id`), a sequence number (`seq`) and date stamp (`date`).
 
@@ -142,9 +202,23 @@ Each provenance mark also includes three additional fields that improve the chai
 
 ### Verification
 
-Third parties can verify the provenance of a work by comparing the key of its Bytewords sequence with the hash of the previous work's sequence. This can be done by collecting marks in a chain from public sources, or auditing marks against a trusted repository of all the chain's marks.
+Third parties can verify the provenance of a work by comparing the `key` of the mark with the hash of the previous work's mark. This can be done by collecting marks in a chain from public sources, or auditing marks against a trusted repository of all the chain's marks.
 
 This process confirms that the works are part of the same chain and have been created by the same individual or entity. Moreover, once the creator publishes a new work, it retroactively verifies the authenticity of the committed-to `hash` in the previous work.
+
+For quick identification, the first four bytes of a provenance mark's `hash` can be translated into Bytewords and displayed with a provenance mark symbol, which can either be the logo of the provenance marking system seen at the top of this document, and which is approved for public use in this capacity, or the unicode symbol `🅟` (U+1F15F, "NEGATIVE CIRCLED LATIN CAPITAL LETTER P"):
+
+> `🅟 JOIN GIFT SONG JURY`
+
+These four Bytewords are sufficiently distinct to be used as a database lookup key for the full provenance mark.
+
+A presentation that includes the full mark along with other metadata might appear as:
+
+> `ur:provenance/lfaohdftdpkeiontynhpfljzfnntcxfzgoiakoryhnwspdlpjnrdspgopynnaxsflgtlrltogdwngysbmeflylkojkwsgtvtvoolbejprydefgaelukelrrtgstotawpylvl`
+>
+> `🅟 DROP KITE INTO NEXT 2023-06-26T08:19:11Z`
+>
+> [Provenance Marks: An Innovative Approach for Authenticity Verification](https://github.com/wolfmcnally/Provenance/blob/master/WHITEPAPER.md)
 
 ### Provenance Mark Resolution
 
@@ -209,23 +283,6 @@ HIGH (106 bytes)
 key                               hash                              id                                seq   date
 ```
 
-#### Security Analysis of the Four Resolutions
-
-A cryptographic problem is considered "hard" if the most efficient known algorithm to solve it would take an impractical amount of time or resources, making it effectively impossible to solve using current technology.
-
-The cryptographic hardness (security level) of each provenance mark resolution increases as its `linkLen` increases. An attacker who wants to forge a next message in a chain would need to try an average of 2^(8 * `linkLen` - 1) hashes to find the next `key`. This is known as a [preimage attack](https://en.wikipedia.org/wiki/Preimage_attack). For lower resolution marks, this attack may practically succeed with current hardware.
-
-But even discovering a series of collisions will not help the attacker discover the 32-byte seed used with the chain's PRNG; they will need to spend the same amount of effort for the production of every forged mark. So while the owner of the chain can produce marks with a single operation, an attacker will need to perform billions.
-
-In addition, due to the chained nature of provenance marks, altering any specific mark in the chain will necessarily alter every mark after it, and require finding a series of `key`s that fit becomes much harder.
-
-Compounding the difficulty, if the record of the chain is distributed in several places, it will require an attacker to alter it in enough places that the forged chain becomes accepted as authentic. This is especially hard when authentic works also carry their assigned provenance mark.
-
-* The `low` resolution format is short and easy to handle, but since it only has a 4-byte (32 bit) `linkLen`, an attacker could forge a next message in the chain by trying an average of 2^31 keys. This could be done relatively quickly with a modern computer and would not be considered "hard". It is therefore recommended that the `low` resolution be used in situations where the risk and consequences of attack is low, space is a premium consideration, and other forms of establishing provenance may be available such as certificates of authenticity. Such a case might be physical works of art such as paintings, prints, or sculptures.
-* The `medium` resolution has a `linkLen` of 8 bytes (64 bits) requiring trying an average of 2^63 keys. This is a significantly larger space and would require a lot of computational resources. However, large botnets or state-level attackers might still be able to perform this many operations, so this could be considered "moderately hard".
-* The `quartile` resolution has a `linkLen` of 16 bytes (128 bits) requiring trying an average of 2^127 keys. This is a huge number and beyond the reach of current technology to brute force. This would be considered "cryptographically hard".
-* The `high` resolution has a `linkLen` of 32 bytes (256 bits) requiring trying an average of 2^255 keys. This is an even larger number, far beyond the reach of current technology, and would also be considered "cryptographically hard" and in line with current cryptographic best practice.
-
 #### Payload Obfuscation
 
 The first field, `key`, is the header of the structure. The other fields are collectively called the `payload` and are obfuscated using the key and the [ChaCha20](https://en.wikipedia.org/wiki/Salsa20#ChaCha_variant) cipher. The key is *not* considered secret, which is why we refer to its use with the ChaCha20 cipher as *obfuscation* and not *encryption*. The purpose of obfuscation is two-fold:
@@ -258,7 +315,7 @@ Each provenance mark includes as the `key` field the next `linkLen` bytes genera
 
 The first `key` in a chain is the same as the chain's `id`, so the "genesis" mark of a chain is identified as having `key == id` and `seq == 0`.
 
-Part of the image of the `hash` field is the *next* key in the sequence (`nextKey`). Thus, the `key` field of this mark reveals the key used in the hash of the previous mark in the chain, and the `hash` field is a cryptographic commitment to the `nextKey`.
+Part of the image of the `hash` field is the *next* key in the sequence (`nextKey`). Thus, the `key` field of this mark reveals the key used in the hash of the previous mark in the chain, and the `hash` field is a cryptographic commitment to `nextKey`.
 
 Because the key is generated from the PRNG initialized by the chain owner's seed, it is hard for attackers who wish to produce forged marks to guess the upcoming sequence of keys as they would have to find a combination of valid fields for the forgery that produces the `hash` from the previous mark.
 
@@ -337,13 +394,30 @@ The primary advantage of adding metadata to the mark using the `info` field is t
 * In a simple use-case, it may just be a CBOR-encoded UTF-8 string describing the work associated with the provenance mark.
 * In another use-case associated with digital works, it may contain a cryptographic digest of the work, thus binding its bit-for-bit embodiment into the chain.
 * In another use-case, it may contain information relating to transfer of ownership of a work identified by a previous mark in the same chain or in another chain.
-* In a more complex use-case, it may be a structure that authorizes one or more new mark chains, enabling scenarios such as seed rotation or tree-structured chain delegation.
+* In a more complex use-case, it may be a structure that authorizes one or more new mark chains, enabling scenarios such as seed rotation or tree-structured chain delegation. For one example, see [Extension: Chain Rotation with Burn Marks](#extension-chain-rotation-with-burn-marks).
 
 The `info` field is included in the `hash` image, binding it into the entire mark chain in a way that cannot be edited or updated. This makes the `info` in a mark non-editable and non-repudiable without invalidating every mark after it in the chain. This may be considered an advantage or a disadvantage depending on the scenario.
 
 The primary potential disadvantage of using the `info` field is that it increases the size of the mark. This may be problematic when size is a consideration, for example with `low` resolution marks.
 
 An alternative to using the `info` field is to embed the mark in a URL that directs users to a site where the mark and its latest metadata can be verified. See the following section.
+
+### Security Analysis of the Four Resolutions
+
+A cryptographic problem is considered "hard" if the most efficient known algorithm to solve it would take an impractical amount of time or resources, making it effectively impossible to solve using current technology.
+
+The cryptographic hardness (security level) of each provenance mark resolution increases as its `linkLen` increases. An attacker who wants to forge a next message in a chain would need to try an average of 2^(8 * `linkLen` - 1) hashes to find the next `key`. This is known as a [preimage attack](https://en.wikipedia.org/wiki/Preimage_attack). For lower resolution marks, this attack may practically succeed with current hardware.
+
+But even discovering a series of collisions will not help the attacker discover the 32-byte seed used with the chain's PRNG; they will need to spend the same amount of effort for the production of every forged mark. So while the owner of the chain can produce marks with a single operation, an attacker will need to perform billions.
+
+In addition, due to the chained nature of provenance marks, altering any specific mark in the chain will necessarily alter every mark after it, and require finding a series of `key`s that fit becomes much harder.
+
+Compounding the difficulty, if the record of the chain is distributed in several places, it will require an attacker to alter it in enough places that the forged chain becomes accepted as authentic. This is especially hard when authentic works also carry their assigned provenance mark.
+
+* The `low` resolution format is short and easy to handle, but since it only has a 4-byte (32 bit) `linkLen`, an attacker could forge a next message in the chain by trying an average of 2^31 keys. This could be done relatively quickly with a modern computer and would not be considered "hard". It is therefore recommended that the `low` resolution be used in situations where the risk and consequences of attack is low, space is a premium consideration, and other forms of establishing provenance may be available such as certificates of authenticity. Such a case might be physical works of art such as paintings, prints, or sculptures.
+* The `medium` resolution has a `linkLen` of 8 bytes (64 bits) requiring trying an average of 2^63 keys. This is a significantly larger space and would require a lot of computational resources. However, large botnets or state-level attackers might still be able to perform this many operations, so this could be considered "moderately hard".
+* The `quartile` resolution has a `linkLen` of 16 bytes (128 bits) requiring trying an average of 2^127 keys. This is a huge number and beyond the reach of current technology to brute force. This would be considered "cryptographically hard".
+* The `high` resolution has a `linkLen` of 32 bytes (256 bits) requiring trying an average of 2^255 keys. This is an even larger number, far beyond the reach of current technology, and would also be considered "cryptographically hard" and in line with current cryptographic best practice.
 
 ### Other Output Formats
 
@@ -405,7 +479,7 @@ https://gist.github.com/wolfmcnally/86bce635a34fd991dce38e54869368e8#urprovenanc
 
 ![](images/link-qr-code.png)
 
-## Extension: Periodic "Heartbeat" Provenance Marks
+## Extension: Periodic "Heartbeat" Marks
 
 In the realm of networked systems, a "heartbeat" is a periodic signal used to indicate normal operation or to synchronize other parts of a system. We propose a similar concept for our provenance marking system - the periodic issuance of "blank" provenance marks that serve as temporal landmarks within the provenance mark sequence.
 
@@ -426,6 +500,37 @@ For example, let's say an artist publishes a heartbeat mark every week on Monday
 Heartbeat marks also make forgery detectable for marks that claim to be produced later than the next heartbeat mark to appear.  Any forged mark claiming to be published in the future would have to be positioned after the heartbeat mark for that period. Even if the attacker breaks a single key, the next heartbeat mark to appear would repudiate the forgery.
 
 Adding a heartbeat of blank marks to the provenance mark sequence provides a stronger temporal structure and an additional layer of security against forgeries. This extension underscores the versatility and adaptability of our provenance marking system to address the complex demands of establishing and verifying provenance.
+
+## Extension: Chain Rotation
+
+*Chain rotation* enables creators to transition between cryptographic seeds, ensuring the ongoing integrity and security of their provenance chains.
+To facilitate this, the mechanism of *Rotation Statements* is introduced. Rotation Statements allow for the simltaneous termination of an existing provenance chain and its seed, and the initiation of a new chain using a new seed, linking the two chains together.
+
+The new chain must have the *same or higher* resolution as the old chain, allowing for upgrading (but never downgrading) the security of the chain if desired.
+
+### Motivations for Chain Rotation
+
+Several factors might necessitate or benefit from chain rotation:
+
+- **Seed Compromise:** While provenance marks offer robust protection against forgery, the compromise (or suspected compromise) of the cryptographic seed used to generate the marks could undermine the integrity of marks produced after the compromise event. Chain rotation mitigates this risk by declaring the old seed unusable and establishing a new, secure chain.
+- **Delegation of Authority:** Chain rotation enables the transfer of provenance marking authority to (or away from) other entities. For example, an artist might delegate marking to an agent or an organization might shift responsibility between departments.
+- **Periodic Security Enhancements:** Chain rotation as a matter of policy, either at particular intervals or upon the occurrence of defined events, can serve as a proactive security measure, reducing the window of vulnerability associated with a single, long-lived seed.
+
+### Implementing Chain Rotation
+
+A *Burn Mark* is a special provenance mark that includes a *Rotation Statement* in its `info` field. The Rotation Statement explicitly terminates the current chain by invalidating the current seed, and includes information that links the old chain to the a chain, ensuring a smooth transition between the two. To publish a Burn Mark:
+
+1. **Generate `nextKey`:** The creator generates the next `key` in the current chain using the and current seed PRNG. This is the `key` that verifies the `hash` of the Burn Mark.
+2. **Generate new seed:** The creator generates and securely stores a fresh cryptographic seed to initiate the new chain.
+3. **Generate new `id`:** The `id` of the new chain is the first `linkLen` bytes generated from the PRNG using the seed, and MUST be the same or greater length as the `linkLen` of the old chain. In other words, the resolution of the new chain MUST be at least as high as the old chain.
+4. **Calculate `hash`:** The SHA-256 hash of the chain's new `id`: `H(id)` and take the first `linkLen` bytes of the digest. This is the pre-commitment to the new chain.
+5. **Compose Rotation Statement:** The Rotation Statement is a CBOR array containing:
+    - `nextKey`: The next `key` in the current chain.
+    - `hash`: The hashed `id` of the new chain.
+6. **Tag Rotation Statement:** The Rotation Statement is tagged `1112887886` (hex `0x4255524e`, ASCII `BURN`).
+7. **Embed Rotation Statement:** The Rotation Statement is included in the `info` field of the last provenance mark in the old chain, which means it will be part of the image of the `hash` field of the burn mark. This is the Burn Mark.
+
+When verifying a chain of provenance marks, burn marks are detected by the presence of a tagged Rotation Statement in the `info` field of a mark. The next mark in the chain must be the genesis mark of the new chain, which can be verified by hashing the `key` or `id` (which must be the same in a genesis mark) and comparing it to the `hash` in the Rotation Statement.
 
 ## Strengths, Weaknesses, and Implications
 
@@ -484,12 +589,6 @@ Where the number of marks in a chain is moderate (up to the low thousands), publ
 ### Independent Verification Services
 
 Third-party services could be employed to independently verify provenance marks. These services, which could operate in a manner similar to certificate authorities in PKI systems, would add an additional layer of trust and validation. They could periodically verify the integrity of the public registry, independently confirm the provenance of works, and provide services for dispute resolution.
-
-### Periodic Key Rotation
-
-While the system's design aims to mitigate the risks of key compromise, creators could adopt the practice of periodically generating a new secret seed, thereby starting a new provenance chain. This could be done at regular intervals or upon certain triggers (e.g., after a specific number of works, or if there's a suspicion of attempted forgery).
-
-One direction for future work would be to examine how chains of provenance marks might be forked, facilitating key rotation or delegation of responsibilities. As mentioned above the `info` field of provenance marks may be used for this purpose, but standard practice by which to do this has not yet been established.
 
 ### Backup and Recovery
 

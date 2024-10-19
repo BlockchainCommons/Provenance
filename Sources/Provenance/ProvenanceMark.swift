@@ -27,6 +27,14 @@ public struct ProvenanceMark: Codable, Hashable {
         ProvenanceMarkResolution(rawValue: _res)!
     }
     
+    public var idWords: String {
+        return hash
+            .prefix(4)
+            .map({ Bytewords.allWords[Int($0)] })
+            .joined(separator: " ")
+            .uppercased()
+    }
+
     public var info: CBOR? {
         guard !infoBytes.isEmpty else {
             return nil
@@ -200,7 +208,7 @@ extension ProvenanceMark: CustomStringConvertible {
 }
 
 extension ProvenanceMark: URCodable {
-    public static let cborTag = Tag(0x50524f56, "provenance")
+    public static let cborTags = [Tag(0x50524f56, "provenance")]
 
     public var untaggedCBOR: CBOR {
         [
@@ -223,29 +231,3 @@ extension ProvenanceMark: URCodable {
         self = mark
     }
 }
-
-//extension ProvenanceMark: Codable {
-//    enum CodingKeys: CodingKey {
-//        case res
-//        case message
-//    }
-//    
-//    public init(from decoder: Decoder) throws {
-//        let container = try decoder.container(keyedBy: CodingKeys.self)
-//        let res = try container.decode(Int.self, forKey: .res)
-//        guard let resolution = ProvenanceMarkResolution(rawValue: res) else {
-//            throw DecodingError.dataCorruptedError(forKey: .res, in: container, debugDescription: "Invalid resoution value.")
-//        }
-//        let message = try container.decode(Data.self, forKey: .message)
-//        guard let result = Self.init(resolution: resolution, message: message) else {
-//            throw DecodingError.dataCorruptedError(forKey: .message, in: container, debugDescription: "Invalid message.")
-//        }
-//        self = result
-//    }
-//    
-//    public func encode(to encoder: Encoder) throws {
-//        var container = encoder.container(keyedBy: CodingKeys.self)
-//        try container.encode(_res, forKey: .res)
-//        try container.encode(message, forKey: .message)
-//    }
-//}
