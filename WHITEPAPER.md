@@ -202,23 +202,64 @@ Each provenance mark also includes three additional fields that improve the chai
 
 ### Verification
 
-Third parties can verify the provenance of a work by comparing the `key` of the mark with the hash of the previous work's mark. This can be done by collecting marks in a chain from public sources, or auditing marks against a trusted repository of all the chain's marks.
+Third parties can verify the provenance of a work by comparing the `key` of the mark with the hash of the previous work's mark. This can be done by collecting marks in a chain from public sources, or auditing marks against a trusted repository of all the chain's marks. Each mark can be verified to precede the next mark in the chain by using this algorithm:
+
+```swift
+public extension ProvenanceMark {
+    func precedes(next: ProvenanceMark) -> Bool {
+        // `next` can't be a genesis
+        next.seq != 0 &&
+        next.key != next.chainID &&
+        // `next` must have the next highest sequence number
+        seq == next.seq - 1 &&
+        // `next` must have an equal or later date
+        date <= next.date &&
+        // `next` must reveal the key that was used to generate this mark's hash
+        hash == Self.hash(resolution: res, key: key, nextKey: next.key, chainID: chainID, seqBytes: seqBytes, dateBytes: dateBytes, infoBytes: infoBytes)
+    }
+
+    static func isSequenceValid(marks: [ProvenanceMark]) -> Bool {
+        guard marks.count >= 2 else {
+            return false
+        }
+        if marks.first!.seq == 0 {
+            guard marks.first!.isGenesis else {
+                return false
+            }
+        }
+        return zip(marks, marks.dropFirst()).allSatisfy { $0.precedes(next: $1) }
+    }
+
+    var isGenesis: Bool {
+        seq == 0 &&
+        key == chainID
+    }
+}
+```
 
 This process confirms that the works are part of the same chain and have been created by the same individual or entity. Moreover, once the creator publishes a new work, it retroactively verifies the authenticity of the committed-to `hash` in the previous work.
 
+#### Human Identification
+
 For quick identification, the first four bytes of a provenance mark's `hash` can be translated into Bytewords and displayed with a provenance mark symbol, which can either be the logo of the provenance marking system seen at the top of this document, and which is approved for public use in this capacity, or the unicode symbol `🅟` (U+1F15F, "NEGATIVE CIRCLED LATIN CAPITAL LETTER P"):
 
-> `🅟 JOIN GIFT SONG JURY`
+> `🅟 OVAL GAME HARD YURT`
 
 These four Bytewords are sufficiently distinct to be used as a database lookup key for the full provenance mark.
 
 A presentation that includes the full mark along with other metadata might appear as:
 
-> `ur:provenance/lfaohdftdpkeiontynhpfljzfnntcxfzgoiakoryhnwspdlpjnrdspgopynnaxsflgtlrltogdwngysbmeflylkojkwsgtvtvoolbejprydefgaelukelrrtgstotawpylvl`
+> ur:provenance/lfaohdftdpkeiontynhpfljzfnntcxfzgoiakoryeheyimdirfesvttptikiolwshnpakobgeofgdnmnuraydmgrwfpfiewpvodawelrrydefgaelukelrrtgstovszcbzdm
 >
-> `🅟 DROP KITE INTO NEXT 2023-06-26T08:19:11Z`
+> `🅟 OVAL GAME HARD YURT` 2023-06-26T08:19:11Z
 >
-> [Provenance Marks: An Innovative Approach for Authenticity Verification](https://github.com/wolfmcnally/Provenance/blob/master/WHITEPAPER.md)
+> Provenance Marks: An Innovative Approach for Authenticity Verification
+
+Finally, the entire [CBOR](#cbor) encoding of the mark can be used as the input to the [LifeHash](https://lifehash.info) visual hashing algorithm. This produces a unique visual representation of the mark that can be used for quick visual identification, especially in conjunction with the Bytewords:
+
+![](images/lifehash.png)
+
+`🅟 OVAL GAME HARD YURT`
 
 ### Provenance Mark Resolution
 

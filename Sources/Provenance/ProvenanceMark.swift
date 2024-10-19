@@ -231,3 +231,9 @@ extension ProvenanceMark: URCodable {
         self = mark
     }
 }
+
+extension ProvenanceMark {
+    public var fingerprint: Data {
+        sha256(self.cborData)
+    }
+}
