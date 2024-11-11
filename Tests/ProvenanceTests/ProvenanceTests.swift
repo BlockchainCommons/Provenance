@@ -5,15 +5,49 @@ import Foundation
 import BCRandom
 
 struct ProvenanceTests {
-    @Test func testSaveRNGState() {
-        let state: (UInt64, UInt64, UInt64, UInt64) = (17295166580085024720, 422929670265678780, 5577237070365765850, 7953171132032326923)
-        let data = Xoshiro256StarStar.toData(from: state)
-        #expect(data.hex == "d0e72cf15ec604f0bcab28594b8cde05dab04ae79053664d0b9dadc201575f6e")
-        let state2 = Xoshiro256StarStar.toState(from: data)
-        let data2 = Xoshiro256StarStar.toData(from: state2)
-        #expect(data == data2)
+    @Test func testSHA256() throws {
+        let data = "Hello World".utf8Data
+        let digest = sha256(data)
+        #expect(digest.hex == "a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e")
     }
-
+    
+    @Test func testSHA256Joined() throws {
+        let data1 = "Hello ".utf8Data
+        let data2 = "World".utf8Data
+        let digest = sha256([data1, data2])
+        #expect(digest.hex == "a591a6d40bf420404a011733cfb7b190d62c65bf0bcda32b57b277d9ad9f146e")
+    }
+    
+    @Test func testSHA256Prefix() throws {
+        let data1 = "Hello ".utf8Data
+        let data2 = "World".utf8Data
+        let digest = sha256([data1, data2], prefix: 4)
+        #expect(digest.hex == "a591a6d4")
+    }
+    
+    @Test func testExtendKey() throws {
+        let key = "Hello World".utf8Data
+        let extendedKey = extendKey(key)
+        #expect(extendedKey.hex == "813085a508d5fec645abe5a1fb9a23c2a6ac6bef0a99650017b3ef50538dba39")
+    }
+    
+    @Test func testRNG() throws {
+        let data = "Hello World".utf8Data
+        let digest = sha256(data)
+        var rng = Xoshiro256StarStar(digest)
+        let key = rng.nextBytes(32)
+        #expect(key.hex == "b18b446df414ec00714f19cb0f03e45cd3c3d5d071d2e7483ba8627c65b9926a")
+    }
+    
+    @Test func testObfuscate() throws {
+        let key = "Hello".utf8Data
+        let message = "World".utf8Data
+        let obfuscated = obfuscate(key: key, message: message)
+        #expect(obfuscated.hex == "c43889aafa")
+        let deobfuscated = obfuscate(key: key, message: obfuscated)
+        #expect(String(decoding: deobfuscated, as: UTF8.self) == "World")
+    }
+    
     @Test func test2ByteDates() throws {
         let baseDate = try Date(iso8601: "2023-06-20T00:00:00Z")
         let baseDateSerialized = baseDate.serialize2Bytes()!
@@ -54,7 +88,7 @@ struct ProvenanceTests {
         //print(maxDate.ISO8601Format())
     }
 
-    @Test func test8ByteDates() throws {
+    @Test func test6ByteDates() throws {
         let format = Date
             .ISO8601FormatStyle()
             .year()
@@ -80,6 +114,15 @@ struct ProvenanceTests {
         // Outside allowed range <-- Y10K bug right here!
         #expect(Date.deserialize6Bytes(‡"e5940a78a800") == nil)
     }
+    
+    @Test func testSaveRNGState() {
+        let state: (UInt64, UInt64, UInt64, UInt64) = (17295166580085024720, 422929670265678780, 5577237070365765850, 7953171132032326923)
+        let data = Xoshiro256StarStar.toData(from: state)
+        #expect(data.hex == "d0e72cf15ec604f0bcab28594b8cde05dab04ae79053664d0b9dadc201575f6e")
+        let state2 = Xoshiro256StarStar.toState(from: data)
+        let data2 = Xoshiro256StarStar.toData(from: state2)
+        #expect(data == data2)
+    }
 
     func runTest(
         resolution: ProvenanceMarkResolution,
@@ -101,7 +144,9 @@ struct ProvenanceTests {
         }
         
         let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
         var encodedGenerator = try encoder.encode(provenanceGen)
+        print(String(data: encodedGenerator, encoding: .utf8)!)
         
         let marks = try dates.map {
             let decoder = JSONDecoder()
@@ -116,6 +161,7 @@ struct ProvenanceTests {
             let result = gen.next(date: $0, info: title)
             
             let encoder = JSONEncoder()
+            encoder.outputFormatting = .sortedKeys
             encodedGenerator = try encoder.encode(gen)
             
             return result
@@ -176,7 +222,9 @@ struct ProvenanceTests {
                 
         for mark in marks {
             let encoder = JSONEncoder()
+            encoder.outputFormatting = .sortedKeys
             let data = try encoder.encode(mark)
+            print(String(data: data, encoding: .utf8)!)
             let decoder = JSONDecoder()
             let mark2 = try decoder.decode(ProvenanceMark.self, from: data)
             #expect(mark == mark2)
@@ -563,6 +611,7 @@ struct ProvenanceTests {
             "https://example.com/validate?provenance=tngdgmgwhflfaohdhgdkgunnehhyuyuoeepfutguhsmdiadesgeceeueisamrpfmvtdaoectuoltahyldezejlplwmwmgdaxiyglbbkpplrdgtlssbdpldjzoxjsiystjntnihdmcaisnysojekecwjpesemylwtwpjpfphkkecwjehdlenerkftkbckjzjlvosffsjp",
             "https://example.com/validate?provenance=tngdgmgwhflfaohdhglnnsesbseepaylvttbcsrdjefhnlnybahpvyjewfwlbwclgutkgtnyzefnptdradmyfxldjkjogordcywfjtrfnndmaekebztsisbziawsbazmonnemtfeietblpglgytddmkpimpksgiektmdiskbkomtrndesfsfhnzmdpaezejpcfgtbymn",
             "https://example.com/validate?provenance=tngdgmgwhflfaohdhgvymonsehvtyaspskvtrlgsrkqzzcrdecisvsgrchmhvshtmyrlnybsaszcctpakkvodnvyfpgmckcftbgrkpplksrkgtcwwetitnwtrodshljscwbaielpsrldgybgemhemkwmsknblpjzcfbkwlgmlfwyjefnpewfnnrorftossieayzowflr",
+            "https://example.com/validate?provenance=tngdgmgwhflfaohdhgntnlhkiacedpldmecmcylehpwpchweprnybdframsffzatzmetdwnyfxswcpmttkmscxialedspylpjegefysrdwhhprfxdybsrhmsiejyveoewdgdyljtvdweetmuosamossfcwfpuywsbzlettvosgluimjlcepkvsvdbgkkbzfgttmdsbie",
         ]
 //        runTest(resolution: .quartile, includeInfo: true, onlyPrint: true)
         try runTest(resolution: .quartile, includeInfo: true, expectedDescriptions: expectedDescriptions, expectedBytewords: expectedBytewords, expectedIDWords: expectedIDWords, expectedURs: expectedURs, expectedURLs: expectedURLs)

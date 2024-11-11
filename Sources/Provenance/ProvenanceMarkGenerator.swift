@@ -4,20 +4,14 @@ import WolfBase
 import BCRandom
 
 public struct ProvenanceMarkGenerator: Codable, Hashable {
-    public let _res: Int
+    public let res: ProvenanceMarkResolution
     public let seed: Data
     public let chainID: Data
     public var nextSeq: UInt32
     public var rngState: Data
-    
-    // KLUDGE ALERT: Temporary workaround for the fact that pre-release SwiftData
-    // does not properly persist codable enums!
-    public var res: ProvenanceMarkResolution {
-        ProvenanceMarkResolution(rawValue: _res)!
-    }
 
     public init(resolution res: ProvenanceMarkResolution, seed: Data, chainID: Data, nextSeq: UInt32, rngState: Data) {
-        self._res = res.rawValue
+        self.res = res
         self.seed = seed
         self.chainID = chainID
         self.nextSeq = nextSeq
