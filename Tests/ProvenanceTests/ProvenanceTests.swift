@@ -146,7 +146,6 @@ struct ProvenanceTests {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .sortedKeys
         var encodedGenerator = try encoder.encode(provenanceGen)
-        print(String(data: encodedGenerator, encoding: .utf8)!)
         
         let marks = try dates.map {
             let decoder = JSONDecoder()
@@ -224,7 +223,6 @@ struct ProvenanceTests {
             let encoder = JSONEncoder()
             encoder.outputFormatting = .sortedKeys
             let data = try encoder.encode(mark)
-            print(String(data: data, encoding: .utf8)!)
             let decoder = JSONDecoder()
             let mark2 = try decoder.decode(ProvenanceMark.self, from: data)
             #expect(mark == mark2)
