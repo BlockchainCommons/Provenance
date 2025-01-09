@@ -2,7 +2,7 @@
 
 <div style="display: flex;">
 <img src="./art/provenance-mark-symbol-white.svg" width="100" style="float: left; margin-right: 10px">
-<div><strong>PROVENANCE</strong><br/>Swift reference implementation of the provenance marking system.<br/>by Wolf McNally <a href="mailto:wolf@wolfmcnally.com">wolf@wolfmcnally.com</a></div>
+<div><strong>PROVENANCE</strong><br/>Swift reference implementation of the provenance marking system.<br/>by Wolf McNally</div>
 </div>
 
 ## Introduction
