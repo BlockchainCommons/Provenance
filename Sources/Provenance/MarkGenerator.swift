@@ -20,9 +20,10 @@ public struct ProvenanceMarkGenerator: Codable, Hashable {
     
     public init(resolution res: ProvenanceMarkResolution, seed: Data) {
         // Definitely don't use the bare seed as the chain ID!
-        let seedDigest = sha256(seed)
-        let chainID = seedDigest.prefix(res.linkLength)
-        self.init(resolution: res, seed: seed, chainID: chainID, nextSeq: 0, rngState: seedDigest)
+        let digest1 = sha256(seed)
+        let chainID = digest1.prefix(res.linkLength)
+        let digest2 = sha256(digest1)
+        self.init(resolution: res, seed: seed, chainID: chainID, nextSeq: 0, rngState: digest2)
     }
 
     public init<R>(resolution res: ProvenanceMarkResolution, using rng: inout R) where R: RandomNumberGenerator {
