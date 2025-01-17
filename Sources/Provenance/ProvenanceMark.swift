@@ -3,6 +3,7 @@ import CryptoSwift
 import URKit
 import func WolfBase.deserialize
 import func WolfBase.todo
+import WolfBase
 
 public struct ProvenanceMark: Codable, Hashable {
     public let res: ProvenanceMarkResolution
@@ -17,12 +18,30 @@ public struct ProvenanceMark: Codable, Hashable {
     public let seq: UInt32
     public let date: Date
     
-    public var idWords: String {
-        return hash
+    public var identifier: String {
+        return hash.prefix(4).hex
+    }
+    
+    public func bytewordsIdentifier(prefix: Bool) -> String {
+        let id = hash
             .prefix(4)
             .map({ Bytewords.allWords[Int($0)] })
             .joined(separator: " ")
             .uppercased()
+        if prefix {
+            return "🅟 " + id
+        } else {
+            return id
+        }
+    }
+    
+    public func bytemojiIdentifier(prefix: Bool) -> String {
+        let id = Bytemojis.identifier(hash.prefix(4))
+        if prefix {
+            return "🅟 " + id
+        } else {
+            return id
+        }
     }
 
     public var info: CBOR? {
@@ -234,21 +253,24 @@ extension ProvenanceMark: Equatable {
 
 extension ProvenanceMark: CustomStringConvertible {
     public var description: String {
+        "ProvenanceMark(\(self.identifier))"
+    }
+}
+
+extension ProvenanceMark: CustomDebugStringConvertible {
+    public var debugDescription: String {
         var components: [String] = [
             "key: \(key.hex)",
             "hash: \(hash.hex)",
             "chainID: \(chainID.hex)",
-//            "seqBytes: \(seqBytes.hex)",
-//            "dateBytes: \(dateBytes.hex)",
             "seq: \(seq)",
-            "date: \(date.ISO8601Format())",
-//            "message: \(message.hex)"
+            "date: \(date.ISO8601UTC)",
         ]
-        
+
         if let info {
             components.append("info: \(info)")
         }
-        
+
         return components.joined(separator: ", ").flanked("ProvenanceMark(", ")")
     }
 }

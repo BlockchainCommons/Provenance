@@ -16,9 +16,9 @@ let package = Package(
     ],
     dependencies: [
          .package(url: "https://github.com/krzyzanowskim/CryptoSwift", from: "1.8.3"),
-         .package(url: "https://github.com/BlockchainCommons/URKit", from: "15.0.0"),
+         .package(url: "https://github.com/BlockchainCommons/URKit", from: "15.1.0"),
          .package(url: "https://github.com/BlockchainCommons/BCSwiftRandom", from: "2.0.0"),
-         .package(url: "https://github.com/wolfmcnally/WolfBase", from: "7.0.1"),
+         .package(url: "https://github.com/wolfmcnally/WolfBase", from: "7.1.0"),
     ],
     targets: [
         .target(
